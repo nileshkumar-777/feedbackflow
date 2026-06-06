@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "265135151280",
+    "project_id": "feedback-flow-060626",
+    "storage_bucket": "feedback-flow-060626.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:265135151280:android:84d0bf3d4db7c0147a8375",
+        "android_client_info": {
+          "package_name": "com.example.feedback_flow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlqpPFHC1uidskNuivX2DGHwMEfX_EK7Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

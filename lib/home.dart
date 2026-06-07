@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:feedback_flow/screens/s1.dart';
-import 'package:feedback_flow/screens/s2.dart';
-import 'package:feedback_flow/screens/s3.dart';
-import 'package:feedback_flow/screens/s4.dart';
-import 'package:feedback_flow/screens/thanks.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'feedback_data.dart';
+import 'feedback_bloc.dart';
+import 'feedback_event.dart';
+import 'feedback_state.dart';
+import 'screens/s1.dart';
+import 'screens/s2.dart';
+import 'screens/s3.dart';
+import 'screens/s4.dart';
+import 'screens/thanks.dart';
+import 'database_helper.dart';
 
 class MultiStepForm extends StatefulWidget {
   const MultiStepForm({super.key});
@@ -15,29 +21,56 @@ class MultiStepForm extends StatefulWidget {
 class _MultiStepFormState extends State<MultiStepForm> {
   int currentStep = 1;
 
-  void nextStep() {
+  final FeedbackData feedbackData = FeedbackData();
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> nextStep() async {
+    // Save Step 1 Data
+    if (currentStep == 1) {
+      feedbackData.name = nameController.text.trim();
+      feedbackData.email = emailController.text.trim();
+      feedbackData.phone = phoneController.text.trim();
+    }
+
     if (currentStep < 4) {
       setState(() {
         currentStep++;
       });
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ThankYouScreen()),
-      );
+      // Dispatch the SubmitFeedback event to the BLoC
+      context.read<FeedbackBloc>().add(SubmitFeedback(feedbackData));
     }
   }
 
   Widget getStepContent() {
     switch (currentStep) {
       case 1:
-        return const StepOneScreen();
+        return StepOneScreen(
+          nameController: nameController,
+          emailController: emailController,
+          phoneController: phoneController,
+        );
+
       case 2:
-        return const StepTwoScreen();
+        return StepTwoScreen(feedbackData: feedbackData);
+
       case 3:
-        return const StepThreeScreen();
+        return StepThreeScreen(feedbackData: feedbackData);
+
       case 4:
-        return const StepFourScreen();
+        return StepFourScreen(feedbackData: feedbackData);
+
       default:
         return const SizedBox();
     }
@@ -45,56 +78,130 @@ class _MultiStepFormState extends State<MultiStepForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF13131A),
-
-      body: SafeArea(child: getStepContent()),
-
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: GestureDetector(
-            onTap: nextStep,
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
+    return BlocConsumer<FeedbackBloc, FeedbackState>(
+      listener: (context, state) {
+        if (state is FeedbackSuccess) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ThankYouScreen()),
+          );
+        } else if (state is FeedbackError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: const Color(0xFF13131A),
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Animated Progress Bar Indicator
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: 16,
+                    left: 20,
+                    right: 20,
+                    bottom: 8,
+                  ),
+                  child: Row(
+                    children: List.generate(4, (index) {
+                      final stepNumber = index + 1;
+                      final isActive = currentStep >= stepNumber;
+                      return Expanded(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? const Color(0xFF6366F1)
+                                : Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(3),
+                            boxShadow: isActive
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF6366F1,
+                                      ).withOpacity(0.4),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6366F1).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    currentStep == 4 ? "Submit Feedback" : "Continue",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+
+                // Current Step Form Content
+                Expanded(child: getStepContent()),
+              ],
+            ),
+          ),
+
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: state is FeedbackLoading ? null : nextStep,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6366F1).withOpacity(0.30),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white,
-                    size: 18,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (state is FeedbackLoading && currentStep == 4)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      else ...[
+                        Text(
+                          currentStep == 4 ? "Submit Feedback" : "Continue",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ],
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

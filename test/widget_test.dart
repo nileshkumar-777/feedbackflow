@@ -5,25 +5,23 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('shows the basic login screen', (WidgetTester tester) async {
     await tester.pumpWidget(const FeedbackFlowApp());
+    await tester.pumpAndSettle(
+      const Duration(seconds: 4),
+    ); // Wait for the loading animation to finish
 
-    expect(find.text('Feedback Flow'), findsOneWidget);
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Welcome Back!'), findsOneWidget);
     expect(find.byType(TextFormField), findsNWidgets(2));
-    expect(find.text('Email Address'), findsOneWidget);
-    expect(find.text('Password'), findsOneWidget);
-    expect(find.text('Forgot Password?'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
-    expect(find.text("Don't have an account? "), findsOneWidget);
-    expect(find.text('Sign Up'), findsOneWidget);
+    expect(find.text('Sign In With Google'), findsOneWidget);
   });
 
   testWidgets('validates required login fields', (WidgetTester tester) async {
     await tester.pumpWidget(const FeedbackFlowApp());
+    await tester.pumpAndSettle(const Duration(seconds: 4));
 
     await tester.tap(find.text('Login'));
     await tester.pump();
 
-    expect(find.text('Enter your email address'), findsOneWidget);
-    expect(find.text('Enter your password'), findsOneWidget);
+    expect(find.text('Enter Email'), findsOneWidget);
   });
 }

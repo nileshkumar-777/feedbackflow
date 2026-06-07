@@ -1,32 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:feedback_flow/feedback_data.dart';
 
 class StepTwoScreen extends StatelessWidget {
-  const StepTwoScreen({super.key});
+  final FeedbackData feedbackData;
+  const StepTwoScreen({super.key, required this.feedbackData});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F0F14),
-      ),
-      home: const Scaffold(body: SafeArea(child: DescribeIssueWidget())),
-    );
+    return DescribeIssueWidget(feedbackData: feedbackData);
   }
 }
 
+// ======================================
+// STEP 2 - DESCRIBE ISSUE SCREEN
+// ======================================
+
 class DescribeIssueWidget extends StatefulWidget {
-  const DescribeIssueWidget({super.key});
+  final FeedbackData feedbackData;
+  const DescribeIssueWidget({super.key, required this.feedbackData});
 
   @override
   State<DescribeIssueWidget> createState() => _DescribeIssueWidgetState();
 }
 
 class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
-  String? _selectedCategory;
-  String _selectedSeverity = 'Low';
+  // ======================================
+  // STATE VARIABLES
+  // ======================================
 
-  // Dropdown categories extracted from your second image
+  late String? _selectedCategory;
+  late String _selectedSeverity;
+  late TextEditingController _titleController;
+  late TextEditingController _descController;
+
+  // ======================================
+  // CATEGORY LIST
+  // ======================================
+
   final List<String> _categories = [
     'UI Bug',
     'Crash',
@@ -37,13 +47,42 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.feedbackData.category.isEmpty
+        ? null
+        : widget.feedbackData.category;
+    _selectedSeverity = widget.feedbackData.severity.isEmpty
+        ? 'Low'
+        : widget.feedbackData.severity;
+    if (widget.feedbackData.severity.isEmpty) {
+      widget.feedbackData.severity = 'Low';
+    }
+    _titleController = TextEditingController(
+      text: widget.feedbackData.issueTitle,
+    );
+    _descController = TextEditingController(
+      text: widget.feedbackData.issueDescription,
+    );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title
+          // ======================================
+          // SCREEN HEADER
+          // ======================================
           const Text(
             'Describe the Issue',
             style: TextStyle(
@@ -52,15 +91,19 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
               color: Colors.white,
             ),
           ),
+
           const SizedBox(height: 8),
-          // Subtitle
+
           const Text(
             "Help us understand the problem you're facing.",
             style: TextStyle(fontSize: 14, color: Colors.white38),
           ),
+
           const SizedBox(height: 28),
 
-          // Main Card Container
+          // ======================================
+          // MAIN FORM CARD
+          // ======================================
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(20.0),
@@ -73,10 +116,18 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Bug Title Section
+                    // ======================================
+                    // BUG TITLE SECTION
+                    // ======================================
                     _buildLabel('BUG TITLE'),
+
                     const SizedBox(height: 8),
+
                     TextField(
+                      controller: _titleController,
+                      onChanged: (value) {
+                        widget.feedbackData.issueTitle = value;
+                      },
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'e.g. App crashes on login',
@@ -107,11 +158,16 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 24),
 
-                    // Category Section
+                    // ======================================
+                    // CATEGORY SECTION
+                    // ======================================
                     _buildLabel('CATEGORY'),
+
                     const SizedBox(height: 8),
+
                     DropdownButtonFormField<String>(
                       value: _selectedCategory,
                       hint: Row(
@@ -171,14 +227,20 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
                       onChanged: (newValue) {
                         setState(() {
                           _selectedCategory = newValue;
+                          widget.feedbackData.category = newValue ?? '';
                         });
                       },
                     ),
+
                     const SizedBox(height: 24),
 
-                    // Severity Section
+                    // ======================================
+                    // SEVERITY SECTION
+                    // ======================================
                     _buildLabel('SEVERITY'),
+
                     const SizedBox(height: 10),
+
                     Row(
                       children: [
                         Expanded(
@@ -206,19 +268,30 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 12),
+
                     _buildSeverityButton(
                       label: 'Critical',
                       activeBgColor: const Color(0xFF3A142C),
                       activeTextColor: const Color(0xFFEC4899),
                       fullWidth: true,
                     ),
+
                     const SizedBox(height: 24),
 
-                    // Description Section
+                    // ======================================
+                    // DESCRIPTION SECTION
+                    // ======================================
                     _buildLabel('DESCRIPTION'),
+
                     const SizedBox(height: 8),
+
                     TextField(
+                      controller: _descController,
+                      onChanged: (value) {
+                        widget.feedbackData.issueDescription = value;
+                      },
                       maxLines: 5,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
@@ -228,7 +301,7 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
                           fontSize: 15,
                         ),
                         prefixIcon: const Padding(
-                          padding: EdgeInsets.only(bottom: 60.0),
+                          padding: EdgeInsets.only(bottom: 60),
                           child: Icon(
                             Icons.description_outlined,
                             color: Colors.white30,
@@ -261,7 +334,10 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
     );
   }
 
-  // Section Header Text Helper
+  // ======================================
+  // LABEL WIDGET
+  // ======================================
+
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -274,7 +350,10 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
     );
   }
 
-  // Updated Dynamic Severity Button Helper accepting custom distinct color profiles
+  // ======================================
+  // SEVERITY BUTTON WIDGET
+  // ======================================
+
   Widget _buildSeverityButton({
     required String label,
     required Color activeBgColor,
@@ -287,6 +366,7 @@ class _DescribeIssueWidgetState extends State<DescribeIssueWidget> {
       onTap: () {
         setState(() {
           _selectedSeverity = label;
+          widget.feedbackData.severity = label;
         });
       },
       borderRadius: BorderRadius.circular(12),

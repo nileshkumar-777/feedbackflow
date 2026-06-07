@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 
-class StepOneScreen extends StatelessWidget {
-  const StepOneScreen({super.key});
+class StepOneScreen extends StatefulWidget {
+  final TextEditingController nameController;
+  final TextEditingController emailController;
+  final TextEditingController phoneController;
 
+  const StepOneScreen({
+    super.key,
+    required this.nameController,
+    required this.emailController,
+    required this.phoneController,
+  });
+
+  @override
+  State<StepOneScreen> createState() => _StepOneScreenState();
+}
+
+class _StepOneScreenState extends State<StepOneScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFF13131A),
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -49,9 +63,7 @@ class StepOneScreen extends StatelessWidget {
                   child: const CircleAvatar(
                     radius: 55,
                     backgroundColor: Color(0xFF2C2C35),
-                    backgroundImage: NetworkImage(
-                      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-                    ),
+                    child: Icon(Icons.person, size: 60, color: Colors.white54),
                   ),
                 ),
                 Positioned(
@@ -60,7 +72,7 @@ class StepOneScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
-                      color: Color.fromARGB(255, 106, 107, 122),
+                      color: Color(0xFF6A6B7A),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -81,25 +93,31 @@ class StepOneScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildField(
+                  controller: widget.nameController,
                   label: 'Full Name',
-                  hint: 'John Doe',
+                  hint: 'Enter your full name',
                   icon: Icons.person_outline,
+                  keyboardType: TextInputType.name,
                 ),
 
                 const SizedBox(height: 16),
 
                 _buildField(
+                  controller: widget.emailController,
                   label: 'Email Address',
-                  hint: 'john@example.com',
+                  hint: 'Enter your email',
                   icon: Icons.mail_outline,
+                  keyboardType: TextInputType.emailAddress,
                 ),
 
                 const SizedBox(height: 16),
 
                 _buildField(
+                  controller: widget.phoneController,
                   label: 'Phone Number',
                   hint: '+91 XXXXXXXXXX',
                   icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
                 ),
 
                 const Spacer(),
@@ -125,9 +143,11 @@ class StepOneScreen extends StatelessWidget {
   }
 
   Widget _buildField({
+    required TextEditingController controller,
     required String label,
     required String hint,
     required IconData icon,
+    required TextInputType keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,6 +164,9 @@ class StepOneScreen extends StatelessWidget {
         const SizedBox(height: 8),
 
         TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textInputAction: TextInputAction.next,
           style: const TextStyle(color: Colors.white, fontSize: 16),
           decoration: InputDecoration(
             hintText: hint,
@@ -155,6 +178,10 @@ class StepOneScreen extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
             ),
           ),
         ),

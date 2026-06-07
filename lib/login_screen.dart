@@ -1,270 +1,117 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:feedback_flow/home.dart';
+import 'package:feedback_flow/screens/s1.dart';
+import 'package:feedback_flow/screens/s2.dart';
+import 'package:feedback_flow/screens/s3.dart';
+import 'package:feedback_flow/screens/s4.dart';
+import 'package:feedback_flow/screens/thanks.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class MultiStepForm extends StatefulWidget {
+  const MultiStepForm({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<MultiStepForm> createState() => _MultiStepFormState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+class _MultiStepFormState extends State<MultiStepForm> {
+  int currentStep = 1;
 
-  final _formKey = GlobalKey<FormState>();
-
-  bool _obscurePassword = true;
-  bool _isGoogleLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _googleSignIn.initialize(
-      serverClientId:
-          '265135151280-h9kacv6eirbin4co0u2c3ks5s8n4qus6.apps.googleusercontent.com',
-    );
-  }
-
-  void _submit() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    FocusManager.instance.primaryFocus?.unfocus();
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomePage(userName: "Nilesh"),
-      ),
-    );
-  }
-
-  Future<void> _signInWithGoogle() async {
-    if (_isGoogleLoading) return;
-
-    setState(() {
-      _isGoogleLoading = true;
-    });
-
-    try {
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(
-        credential,
-      );
-
-      final displayName = userCredential.user?.displayName ?? "User";
-
-      if (!mounted) return;
-
+  void nextStep() {
+    if (currentStep < 4) {
+      setState(() {
+        currentStep++;
+      });
+    } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(userName: displayName),
-        ),
+        MaterialPageRoute(builder: (context) => const ThankYouScreen()),
       );
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGoogleLoading = false;
-        });
-      }
     }
   }
 
-  InputDecoration _fieldDecoration({
-    required String hintText,
-    required IconData icon,
-    required Color fillColor,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      filled: true,
-      fillColor: fillColor,
-      hintText: hintText,
-      hintStyle: const TextStyle(color: Colors.white24),
-      prefixIcon: Icon(icon, color: Colors.white38),
-      suffixIcon: suffixIcon,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-    );
+  Widget getStepContent() {
+    switch (currentStep) {
+      case 1:
+        return const StepOneScreen();
+
+      case 2:
+        return const StepTwoScreen();
+
+      case 3:
+        return const StepThreeScreen();
+
+      case 4:
+        return const StepFourScreen();
+
+      default:
+        return const SizedBox();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const bgColor = Color(0xFF111827);
-    const cardColor = Color(0xFF1F2937);
-    const fieldColor = Color(0xFF2C3446);
-    const accentColor = Color(0xFF6366F1);
-
     return Scaffold(
-      backgroundColor: bgColor,
+      appBar: AppBar(title: Text("Step $currentStep of 4"), centerTitle: true),
+
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const _FeedbackLogo(),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      "Feedback Flow",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            style: const TextStyle(color: Colors.white),
-                            decoration: _fieldDecoration(
-                              hintText: "Email",
-                              icon: Icons.email,
-                              fillColor: fieldColor,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Enter Email";
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          TextFormField(
-                            obscureText: _obscurePassword,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: _fieldDecoration(
-                              hintText: "Password",
-                              icon: Icons.lock,
-                              fillColor: fieldColor,
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.length < 6) {
-                                return "Minimum 6 characters";
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          FilledButton(
-                            onPressed: _submit,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: accentColor,
-                              minimumSize: const Size.fromHeight(55),
-                            ),
-                            child: const Text("Login"),
-                          ),
-
-                          const SizedBox(height: 15),
-
-                          FilledButton.icon(
-                            onPressed: _isGoogleLoading
-                                ? null
-                                : _signInWithGoogle,
-                            icon: _isGoogleLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.g_mobiledata,
-                                    color: Colors.black,
-                                    size: 35,
-                                  ),
-                            label: Text(
-                              _isGoogleLoading
-                                  ? "Signing In..."
-                                  : "Sign In With Google",
-                              style: const TextStyle(color: Colors.black),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(55),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Text(
+                "Step $currentStep",
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+
+              const SizedBox(height: 30),
+
+              Expanded(child: getStepContent()),
+            ],
+          ),
+        ),
+      ),
+
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: nextStep,
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    currentStep == 4 ? "Submit" : "Continue",
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Icon(
+                    Icons.arrow_forward,
+                    color: Color(0xFF111827),
+                    size: 18,
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _FeedbackLogo extends StatelessWidget {
-  const _FeedbackLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 90,
-      height: 90,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF7C3AED), Color(0xFF2563EB)],
-        ),
-      ),
-      child: const Icon(Icons.chat, color: Colors.white, size: 50),
     );
   }
 }

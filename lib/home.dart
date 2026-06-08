@@ -60,6 +60,7 @@ class _MultiStepFormState extends State<MultiStepForm> {
           nameController: nameController,
           emailController: emailController,
           phoneController: phoneController,
+          feedbackData: feedbackData,
         );
 
       case 2:

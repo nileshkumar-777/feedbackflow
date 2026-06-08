@@ -2,10 +2,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:feedback_flow/home.dart';
 import 'package:feedback_flow/screens/submissions_screen.dart';
+import 'package:feedback_flow/database_service.dart';
+import 'package:feedback_flow/screens/auth_service.dart';
+import 'package:feedback_flow/service_locator.dart';
 
-class FeedbackHubScreen extends StatelessWidget {
+class FeedbackHubScreen extends StatefulWidget {
   const FeedbackHubScreen({super.key});
 
+  @override
+  State<FeedbackHubScreen> createState() => _FeedbackHubScreenState();
+}
+
+class _FeedbackHubScreenState extends State<FeedbackHubScreen> {
   Widget _buildGlow(Color color, double size) {
     return Container(
       width: size,
@@ -15,6 +23,45 @@ class FeedbackHubScreen extends StatelessWidget {
         color: color.withOpacity(0.4),
       ),
     );
+  }
+
+  Future<void> _exportDataWithAuth(BuildContext context) async {
+    final authenticated = await AuthService.authenticate(
+      context,
+      'Please authenticate to export feedback data',
+    );
+
+    if (!authenticated) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Authentication required to export data.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final dbService = locator<DatabaseService>();
+      final path = await dbService.exportFeedbacksToCSV();
+
+      if (!context.mounted) return;
+
+      if (path == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No feedback entries to export.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported successfully to:\n$path')),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    }
   }
 
   @override
@@ -96,25 +143,39 @@ class FeedbackHubScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFF6366F1),
-                                        Color(0xFFEC4899),
-                                      ],
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.download,
+                                        color: Colors.white,
+                                      ),
+                                      tooltip: 'Export CSV',
+                                      onPressed: () =>
+                                          _exportDataWithAuth(context),
                                     ),
-                                  ),
-                                  child: const CircleAvatar(
-                                    radius: 26,
-                                    backgroundColor: Color(0xFF1F2937),
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.white,
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color(0xFF6366F1),
+                                            Color(0xFFEC4899),
+                                          ],
+                                        ),
+                                      ),
+                                      child: const CircleAvatar(
+                                        radius: 26,
+                                        backgroundColor: Color(0xFF1F2937),
+                                        child: Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -242,8 +303,47 @@ class FeedbackHubScreen extends StatelessWidget {
                               ),
                             ),
 
-                            // Space between the Hero Card and Submission History
-                            const SizedBox(height: 40),
+                            const SizedBox(height: 24),
+
+                            // Export CSV Action Button
+                            GestureDetector(
+                              onTap: () => _exportDataWithAuth(context),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(
+                                      Icons.file_download_outlined,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Export CSV Data',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
 
                             // My Feedbacks Glass Card
                             GestureDetector(

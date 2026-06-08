@@ -1,15 +1,20 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:feedback_flow/feedback_data.dart';
 
 class StepOneScreen extends StatefulWidget {
   final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController phoneController;
+  final FeedbackData feedbackData;
 
   const StepOneScreen({
     super.key,
     required this.nameController,
     required this.emailController,
     required this.phoneController,
+    required this.feedbackData,
   });
 
   @override
@@ -45,44 +50,69 @@ class _StepOneScreenState extends State<StepOneScreen> {
           const SizedBox(height: 30),
 
           Center(
-            child: Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x227B88FF),
-                        blurRadius: 25,
-                        spreadRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: const CircleAvatar(
-                    radius: 55,
-                    backgroundColor: Color(0xFF2C2C35),
-                    child: Icon(Icons.person, size: 60, color: Colors.white54),
-                  ),
-                ),
-                Positioned(
-                  right: 4,
-                  bottom: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
+            child: GestureDetector(
+              onTap: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.image,
+                );
+                if (result != null && result.files.single.path != null) {
+                  setState(() {
+                    widget.feedbackData.profilePicturePath =
+                        result.files.single.path!;
+                  });
+                }
+              },
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF6A6B7A),
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x227B88FF),
+                          blurRadius: 25,
+                          spreadRadius: 10,
+                        ),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: Colors.white,
+                    child: CircleAvatar(
+                      radius: 55,
+                      backgroundColor: const Color(0xFF2C2C35),
+                      backgroundImage:
+                          widget.feedbackData.profilePicturePath.isNotEmpty
+                          ? FileImage(
+                              File(widget.feedbackData.profilePicturePath),
+                            )
+                          : null,
+                      child: widget.feedbackData.profilePicturePath.isEmpty
+                          ? const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.white54,
+                            )
+                          : null,
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    right: 4,
+                    bottom: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF6A6B7A),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 

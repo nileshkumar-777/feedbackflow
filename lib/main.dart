@@ -8,11 +8,14 @@ import 'database_service.dart';
 import 'home.dart';
 import 'login_screen.dart';
 import 'screens/loading_screen.dart';
+import 'service_locator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  setupLocator(); // Initialize Dependency Injection
 
   runApp(const FeedbackFlowApp());
 }
@@ -25,7 +28,8 @@ class FeedbackFlowApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<FeedbackBloc>(
-          create: (context) => FeedbackBloc(databaseService: DatabaseService()),
+          create: (context) =>
+              FeedbackBloc(databaseService: locator<DatabaseService>()),
         ),
       ],
       child: MaterialApp(

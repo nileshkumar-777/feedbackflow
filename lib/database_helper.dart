@@ -3,7 +3,7 @@ import 'package:path/path.dart';
 
 class DatabaseHelper {
   static const _databaseName = "FeedbackDB.db";
-  static const _databaseVersion = 1;
+  static const _databaseVersion = 3;
   static const table = 'feedback';
 
   // Make this a singleton class
@@ -23,6 +23,7 @@ class DatabaseHelper {
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -37,9 +38,20 @@ class DatabaseHelper {
         issueDescription TEXT NOT NULL,
         category TEXT NOT NULL,
         severity TEXT NOT NULL,
-        attachments TEXT NOT NULL
+        attachments TEXT NOT NULL,
+        profilePicturePath TEXT NOT NULL DEFAULT ''
       )
       ''');
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      try {
+        await db.execute(
+          'ALTER TABLE $table ADD COLUMN profilePicturePath TEXT NOT NULL DEFAULT ""',
+        );
+      } catch (_) {} // Safely ignore if the column already exists
+    }
   }
 
   Future<int> insertFeedback(Map<String, dynamic> row) async {

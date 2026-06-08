@@ -4,6 +4,7 @@ import 'package:feedback_flow/feedback_bloc.dart';
 import 'package:feedback_flow/feedback_event.dart';
 import 'package:feedback_flow/feedback_state.dart';
 import 'package:feedback_flow/database_service.dart';
+import 'package:feedback_flow/service_locator.dart';
 
 class SubmissionsScreen extends StatefulWidget {
   const SubmissionsScreen({super.key});
@@ -36,7 +37,7 @@ class _SubmissionsScreenState extends State<SubmissionsScreen> {
             tooltip: 'Export as CSV',
             onPressed: () async {
               try {
-                final dbService = DatabaseService();
+                final dbService = locator<DatabaseService>();
                 final path = await dbService.exportFeedbacksToCSV();
 
                 if (!context.mounted) return;

@@ -9,6 +9,7 @@ class FeedbackData {
   String severity = '';
 
   List<String> attachments = [];
+  String profilePicturePath = '';
 
   Map<String, dynamic> toMap() {
     return {
@@ -19,6 +20,7 @@ class FeedbackData {
       'issueDescription': issueDescription,
       'category': category,
       'severity': severity,
+      'profilePicturePath': profilePicturePath,
       'attachments': attachments.join(
         ',',
       ), // Convert list to string for storage

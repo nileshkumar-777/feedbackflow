@@ -2,6 +2,8 @@ import '../database_helper.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 /// Service layer that interacts with the raw SQLite DatabaseHelper
 class DatabaseService {
@@ -28,39 +30,67 @@ class DatabaseService {
       final feedbacks = await loadFeedbacks();
       if (feedbacks.isEmpty) return null; // Gracefully handle empty database
 
+      // Get Device Owner
+      final deviceOwner =
+          FirebaseAuth.instance.currentUser?.email ?? 'Unknown Owner';
+
+      // Get User Device Info
+      String userDevice = 'Unknown Device';
+      try {
+        final deviceInfo = DeviceInfoPlugin();
+        if (Platform.isAndroid) {
+          final androidInfo = await deviceInfo.androidInfo;
+          userDevice = '${androidInfo.brand} ${androidInfo.model}';
+        } else if (Platform.isIOS) {
+          final iosInfo = await deviceInfo.iosInfo;
+          userDevice = iosInfo.utsname.machine;
+        }
+      } catch (_) {}
+
       List<List<String>> csvData = [
-        // CSV Headers
+        // CSV Headers mapping exactly to assignment requirements
         [
-          'Name',
-          'Email',
-          'Phone Number',
-          'Bug Title',
-          'Category',
-          'Severity',
-          'Description',
-          'Media Paths',
-          'Created At',
+          'Device Owner',
+          'User Details',
+          'Bug/Issue',
+          'User Device',
+          'Description and Media Links',
         ],
       ];
 
       for (var f in feedbacks) {
+        String userDetails =
+            'Name: ${f['name']}\nEmail: ${f['email']}\nPhone: ${f['phone']}';
+        String bugIssue =
+            'Title: ${f['issueTitle']}\nCategory: ${f['category']}\nSeverity: ${f['severity']}';
+        String descMedia =
+            'Description: ${f['issueDescription']}\nAttachments: ${f['attachments']}\nProfile Pic: ${f['profilePicturePath']}';
+
         csvData.add([
-          f['name']?.toString() ?? '',
-          f['email']?.toString() ?? '',
-          f['phone']?.toString() ?? '',
-          f['issueTitle']?.toString() ?? '',
-          f['category']?.toString() ?? '',
-          f['severity']?.toString() ?? '',
-          f['issueDescription']?.toString() ?? '',
-          f['attachments']?.toString() ?? '',
-          f['createdAt']?.toString() ?? '', // Extracted safely if added later
+          deviceOwner,
+          userDetails,
+          bugIssue,
+          userDevice,
+          descMedia,
         ]);
       }
 
       String csvString = const ListToCsvConverter().convert(csvData);
 
-      // Save the CSV locally on the device
-      final directory = await getApplicationDocumentsDirectory();
+      // Save the CSV locally to the Downloads folder (Scoped Storage)
+      Directory? directory;
+      if (Platform.isAndroid) {
+        directory = Directory('/storage/emulated/0/Download');
+        if (!await directory.exists()) {
+          directory = await getExternalStorageDirectory();
+        }
+      } else {
+        directory = await getDownloadsDirectory();
+      }
+
+      // Fallback to documents directory if Downloads is unavailable
+      directory ??= await getApplicationDocumentsDirectory();
+
       final path = '${directory.path}/feedback_export.csv';
       final file = File(path);
       await file.writeAsString(csvString);

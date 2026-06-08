@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:feedback_flow/feedback_data.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class StepOneScreen extends StatefulWidget {
   final TextEditingController nameController;
@@ -38,83 +39,92 @@ class _StepOneScreenState extends State<StepOneScreen> {
               color: Colors.white,
               letterSpacing: 0.5,
             ),
-          ),
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2),
 
           const SizedBox(height: 12),
 
           const Text(
-            'Tell us a little about yourself before submitting feedback.',
-            style: TextStyle(fontSize: 14, color: Colors.white60, height: 1.4),
-          ),
+                'Tell us a little about yourself before submitting feedback.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white60,
+                  height: 1.4,
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 100.ms, duration: 400.ms)
+              .slideY(begin: 0.2),
 
           const SizedBox(height: 30),
 
           Center(
-            child: GestureDetector(
-              onTap: () async {
-                FilePickerResult? result = await FilePicker.platform.pickFiles(
-                  type: FileType.image,
-                );
-                if (result != null && result.files.single.path != null) {
-                  setState(() {
-                    widget.feedbackData.profilePicturePath =
-                        result.files.single.path!;
-                  });
-                }
-              },
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x227B88FF),
-                          blurRadius: 25,
-                          spreadRadius: 10,
+                child: GestureDetector(
+                  onTap: () async {
+                    FilePickerResult? result = await FilePicker.platform
+                        .pickFiles(type: FileType.image);
+                    if (result != null && result.files.single.path != null) {
+                      setState(() {
+                        widget.feedbackData.profilePicturePath =
+                            result.files.single.path!;
+                      });
+                    }
+                  },
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x227B88FF),
+                              blurRadius: 25,
+                              spreadRadius: 10,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 55,
-                      backgroundColor: const Color(0xFF2C2C35),
-                      backgroundImage:
-                          widget.feedbackData.profilePicturePath.isNotEmpty
-                          ? FileImage(
-                              File(widget.feedbackData.profilePicturePath),
-                            )
-                          : null,
-                      child: widget.feedbackData.profilePicturePath.isEmpty
-                          ? const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.white54,
-                            )
-                          : null,
-                    ),
-                  ),
-                  Positioned(
-                    right: 4,
-                    bottom: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF6A6B7A),
-                        shape: BoxShape.circle,
+                        child: CircleAvatar(
+                          radius: 55,
+                          backgroundColor: const Color(0xFF2C2C35),
+                          backgroundImage:
+                              widget.feedbackData.profilePicturePath.isNotEmpty
+                              ? FileImage(
+                                  File(widget.feedbackData.profilePicturePath),
+                                )
+                              : null,
+                          child: widget.feedbackData.profilePicturePath.isEmpty
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.white54,
+                                )
+                              : null,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.edit,
-                        size: 16,
-                        color: Colors.white,
+                      Positioned(
+                        right: 4,
+                        bottom: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF6A6B7A),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 400.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
 
           const SizedBox(height: 24),
 
@@ -123,32 +133,41 @@ class _StepOneScreenState extends State<StepOneScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildField(
-                  controller: widget.nameController,
-                  label: 'Full Name',
-                  hint: 'Enter your full name',
-                  icon: Icons.person_outline,
-                  keyboardType: TextInputType.name,
-                ),
+                      controller: widget.nameController,
+                      label: 'Full Name',
+                      hint: 'Enter your full name',
+                      icon: Icons.person_outline,
+                      keyboardType: TextInputType.name,
+                    )
+                    .animate()
+                    .fadeIn(delay: 300.ms, duration: 400.ms)
+                    .slideX(begin: 0.1),
 
                 const SizedBox(height: 16),
 
                 _buildField(
-                  controller: widget.emailController,
-                  label: 'Email Address',
-                  hint: 'Enter your email',
-                  icon: Icons.mail_outline,
-                  keyboardType: TextInputType.emailAddress,
-                ),
+                      controller: widget.emailController,
+                      label: 'Email Address',
+                      hint: 'Enter your email',
+                      icon: Icons.mail_outline,
+                      keyboardType: TextInputType.emailAddress,
+                    )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 400.ms)
+                    .slideX(begin: 0.1),
 
                 const SizedBox(height: 16),
 
                 _buildField(
-                  controller: widget.phoneController,
-                  label: 'Phone Number',
-                  hint: '+91 XXXXXXXXXX',
-                  icon: Icons.phone_outlined,
-                  keyboardType: TextInputType.phone,
-                ),
+                      controller: widget.phoneController,
+                      label: 'Phone Number',
+                      hint: '+91 XXXXXXXXXX',
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                    )
+                    .animate()
+                    .fadeIn(delay: 500.ms, duration: 400.ms)
+                    .slideX(begin: 0.1),
 
                 const Spacer(),
 
@@ -163,7 +182,7 @@ class _StepOneScreenState extends State<StepOneScreen> {
                       height: 1.5,
                     ),
                   ),
-                ),
+                ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
               ],
             ),
           ),

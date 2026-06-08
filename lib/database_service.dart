@@ -90,7 +90,6 @@ class DatabaseService {
 
       // Fallback to documents directory if Downloads is unavailable
       directory ??= await getApplicationDocumentsDirectory();
-
       final path = '${directory.path}/feedback_export.csv';
       final file = File(path);
       await file.writeAsString(csvString);

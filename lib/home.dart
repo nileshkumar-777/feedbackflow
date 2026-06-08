@@ -10,6 +10,7 @@ import 'screens/s3.dart';
 import 'screens/s4.dart';
 import 'screens/thanks.dart';
 import 'database_helper.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class MultiStepForm extends StatefulWidget {
   const MultiStepForm({super.key});
@@ -138,8 +139,31 @@ class _MultiStepFormState extends State<MultiStepForm> {
                   ),
                 ),
 
-                // Current Step Form Content
-                Expanded(child: getStepContent()),
+                // Current Step Form Content with smooth AnimatedSwitcher
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0.05, 0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(currentStep),
+                      child: getStepContent(),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -201,7 +225,7 @@ class _MultiStepFormState extends State<MultiStepForm> {
               ),
             ),
           ),
-        );
+        ).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(begin: 0.3);
       },
     );
   }
